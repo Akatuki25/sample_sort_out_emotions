@@ -1,47 +1,51 @@
 package com.example.sort_out_emotions
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.sort_out_emotions.ui.theme.Sort_out_emotionsTheme
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.ComponentActivity
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.viewModels
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.collectAsState
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import com.example.sort_out_emotions.ui.screen.MainScreen
+import com.example.sort_out_emotions.viewmodel.MainViewModel
 
 class MainActivity : ComponentActivity() {
+
+    private val mainViewModel: MainViewModel by viewModels()
+    private lateinit var permissionLauncher: ActivityResultLauncher<Array<String>>
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+
+        // パーミッションのリクエスト
+        permissionLauncher = registerForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions()
+        ) { permissions ->
+            // パーミッションの結果を処理
+        }
+
+        requestPermissions()
+
         setContent {
-            Sort_out_emotionsTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+            MaterialTheme {
+                MainScreen(mainViewModel)
             }
         }
     }
-}
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    Sort_out_emotionsTheme {
-        Greeting("Android")
+    private fun requestPermissions() {
+        val permissions = arrayOf(Manifest.permission.RECORD_AUDIO)
+        val notGranted = permissions.any {
+            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+        }
+        if (notGranted) {
+            permissionLauncher.launch(permissions)
+        }
     }
 }
