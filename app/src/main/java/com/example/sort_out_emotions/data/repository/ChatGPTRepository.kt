@@ -1,10 +1,12 @@
 package com.example.sort_out_emotions.data.repository
 
+import android.util.Log
 import com.example.sort_out_emotions.network.api.OpenAIApi
 import com.example.sort_out_emotions.utils.Constants
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import android.util.Log
 
 class ChatGPTRepository {
 
@@ -20,22 +22,65 @@ class ChatGPTRepository {
     }
 
     suspend fun summarizeText(text: String): List<String> {
-        val prompt = "以下の文章を要約して3つのキーワードを返してください：\n$text"
-        val response = api.getCompletion(prompt = prompt)
-        // レスポンスをログに出力
-        Log.d("ChatGPTRepository", "要約APIのレスポンス: ${response.choices.firstOrNull()?.text}")
+        val prompt = "以下の文章を要約して、重要な3つの単語をリスト形式で返してください：\n$text\n返答はJSON配列のみで返してください。"
+        val response = api.getCompletion(prompt = mapOf("prompt" to prompt).toString())
 
-        // レスポンスのパース（例としてカンマ区切りとします）
-        return response.choices.firstOrNull()?.text?.split(",") ?: emptyList()
+        // レスポンスをパース
+        val jsonText = response.choices.firstOrNull()?.text ?: "[]"
+        return parseJsonArray(jsonText)
     }
 
-    suspend fun analyzeSentiment(text: String): Float {
-        val prompt = "以下の文章をjoy,sadness,anticipation,surprise,anger,fear,disgust,trust,sentimentの感情の数値のみで評価してください。評価条件は、sentimentは-2,-1,0,1,2で、それ以外は0,1,2,3で表す：\n$text"
-        val response = api.getCompletion(prompt = prompt)
-        // レスポンスをログに出力
-        Log.d("ChatGPTRepository", "感情分析APIのレスポンス: ${response.choices.firstOrNull()?.text}")
+    suspend fun analyzeSentiment(text: String): Map<String, Float> {
+        val prompt = """
+            以下の文章の感情を分析してください。結果を以下のJSON形式で返してください：
+            {
+                "joy": int,
+                "sadness": int,
+                "anticipation": int,
+                "surprise": int,
+                "anger": int,
+                "fear": int,
+                "disgust": int,
+                "trust": int,
+                "sentiment": int
+            }
+            条件:sentiment-2~2の範囲で、文章の感情を-2（非常にネガティブ）から2（非常にポジティブ）までの範囲で評価してください。それ以外の指標は0~3の範囲で評価してください。
+            文章：
+            $text
+        """.trimIndent()
 
-        val sentimentText = response.choices.firstOrNull()?.text ?: "0.5"
-        return sentimentText.toFloatOrNull() ?: 0.5f
+        val response = api.getCompletion(prompt = mapOf("prompt" to prompt).toString())
+
+        // レスポンスをパース
+        val jsonText = response.choices.firstOrNull()?.text ?: "{}"
+        return parseJsonObject(jsonText)
+    }
+
+    private fun parseJsonArray(jsonText: String): List<String> {
+        // JSON配列をパースする処理
+        return try {
+            val jsonArray = org.json.JSONArray(jsonText)
+            List(jsonArray.length()) { i -> jsonArray.getString(i) }
+        } catch (e: Exception) {
+            Log.e("ChatGPTRepository", "要約結果のパースに失敗: ${e.message}")
+            emptyList()
+        }
+    }
+
+    private fun parseJsonObject(jsonText: String): Map<String, Float> {
+        // JSONオブジェクトをパースする処理
+        return try {
+            val jsonObject = org.json.JSONObject(jsonText)
+            val keys = jsonObject.keys()
+            val result = mutableMapOf<String, Float>()
+            while (keys.hasNext()) {
+                val key = keys.next()
+                result[key] = jsonObject.getDouble(key).toFloat()
+            }
+            result
+        } catch (e: Exception) {
+            Log.e("ChatGPTRepository", "感情分析結果のパースに失敗: ${e.message}")
+            emptyMap()
+        }
     }
 }

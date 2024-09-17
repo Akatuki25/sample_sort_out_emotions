@@ -14,6 +14,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.sort_out_emotions.ui.component.StickerCanvas
@@ -25,14 +26,31 @@ fun MainScreen(mainViewModel: MainViewModel = viewModel()) {
     val transcribedText by mainViewModel.transcribedText.observeAsState("")
     val images by mainViewModel.images.observeAsState(emptyList())
     val selectedImages by mainViewModel.selectedImages.collectAsState()
+    val isRecording by mainViewModel.isRecording.observeAsState(false)
 
     Column {
-        Button(onClick = {
-            if (checkAudioPermission(context)) {
-                mainViewModel.startSpeechRecognition(context)
+        Row {
+            Button(
+                onClick = {
+                    if (checkAudioPermission(context)) {
+                        mainViewModel.startSpeechRecognition(context)
+                    }
+                },
+                enabled = !isRecording // 録音中は無効化
+            ) {
+                Text("録音開始")
             }
-        }) {
-            Text("音声入力開始")
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Button(
+                onClick = {
+                    mainViewModel.stopSpeechRecognition()
+                },
+                enabled = isRecording // 録音中のみ有効化
+            ) {
+                Text("録音停止")
+            }
         }
 
         Text(text = "文字起こし結果: $transcribedText")
@@ -40,9 +58,13 @@ fun MainScreen(mainViewModel: MainViewModel = viewModel()) {
         if (images.isNotEmpty()) {
             LazyRow {
                 items(images.size) { index ->
-                    Image(bitmap = images[index], contentDescription = null, modifier = Modifier.clickable {
-                        mainViewModel.selectImage(images[index])
-                    })
+                    Image(
+                        bitmap = images[index],
+                        contentDescription = null,
+                        modifier = Modifier.clickable {
+                            mainViewModel.selectImage(images[index])
+                        }
+                    )
                 }
             }
         }
@@ -54,5 +76,8 @@ fun MainScreen(mainViewModel: MainViewModel = viewModel()) {
 }
 
 private fun checkAudioPermission(context: Context): Boolean {
-    return ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+    return ContextCompat.checkSelfPermission(
+        context,
+        Manifest.permission.RECORD_AUDIO
+    ) == PackageManager.PERMISSION_GRANTED
 }
