@@ -2,10 +2,12 @@ package com.example.sort_out_emotions.viewmodel
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.util.Log
+import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -18,7 +20,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
-import android.graphics.BitmapFactory
 import java.util.*
 
 class MainViewModel : ViewModel() {
@@ -103,16 +104,33 @@ class MainViewModel : ViewModel() {
         Log.d("MainViewModel", "音声認識の文字起こし結果: $text")
 
         CoroutineScope(Dispatchers.IO).launch {
+            // ChatGPT APIを使用して要約と感情分析を行う
             val keywords = chatGPTRepository.summarizeText(text)
             val sentimentMap = chatGPTRepository.analyzeSentiment(text)
 
-            Log.d("MainViewModel", "ChatGPTの要約結果（キーワード）: ${keywords.joinToString(", ")}")
+            // 要約結果と感情分析結果をログに出力
+            Log.d("MainViewModel", "ChatGPTの要約結果（キーワード）: $keywords")
             Log.d("MainViewModel", "ChatGPTの感情分析結果: $sentimentMap")
 
             try {
-                val imageData = stableDiffusionRepository.generateImages(
-                    summary = keywords,
-                    sentiment = sentimentMap
+                // キーワードをそのままkeywordに渡す
+                val keyword = keywords.trim()
+
+                // 感情分析結果
+                val features = listOf(
+                    sentimentMap["joy"] ?: 0f,
+                    sentimentMap["sadness"] ?: 0f,
+                    sentimentMap["anticipation"] ?: 0f,
+                    sentimentMap["surprise"] ?: 0f,
+                    sentimentMap["anger"] ?: 0f,
+                    sentimentMap["fear"] ?: 0f,
+                    sentimentMap["disgust"] ?: 0f,
+                    sentimentMap["trust"] ?: 0f
+                ).map { it * 1.0f }
+
+                val imageData = stableDiffusionRepository.generateImage(
+                    keyword = keyword,
+                    features = features
                 )
 
                 val bitmap = BitmapFactory.decodeByteArray(imageData, 0, imageData.size)?.asImageBitmap()
@@ -129,6 +147,7 @@ class MainViewModel : ViewModel() {
     }
 
     fun selectImage(image: ImageBitmap) {
+        // 選択された画像をリストに追加
         _selectedImages.value = _selectedImages.value + image
     }
 

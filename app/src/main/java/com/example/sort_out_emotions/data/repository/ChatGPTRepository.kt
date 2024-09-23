@@ -21,18 +21,22 @@ class ChatGPTRepository {
         api = retrofit.create(OpenAIApi::class.java)
     }
 
-    suspend fun summarizeText(text: String): List<String> {
-        val prompt = "以下の文章を要約して、重要な3つの単語をリスト形式で返してください：\n$text\n返答はJSON配列のみで返してください。"
+    suspend fun summarizeText(text: String): String {
+        val prompt = "以下の文章を要約して、重要な3つの英単語のキーワードをカンマ区切りの文字列のみで返してください：\n$text"
         val response = api.getCompletion(prompt = mapOf("prompt" to prompt).toString())
 
-        // レスポンスをパース
-        val jsonText = response.choices.firstOrNull()?.text ?: "[]"
-        return parseJsonArray(jsonText)
+        // レスポンスを取得
+        val keywordsText = response.choices.firstOrNull()?.text?.trim() ?: ""
+
+        // ログに出力（デバッグ用）
+        Log.d("ChatGPTRepository", "要約結果（キーワード）: $keywordsText")
+
+        return keywordsText
     }
 
     suspend fun analyzeSentiment(text: String): Map<String, Float> {
         val prompt = """
-            以下の文章の感情を分析してください。結果を以下のJSON形式で返してください：
+            以下の文章の感情を分析してください。結果を以下のJSON形式のみで返してください：
             {
                 "joy": int,
                 "sadness": int,
@@ -41,10 +45,9 @@ class ChatGPTRepository {
                 "anger": int,
                 "fear": int,
                 "disgust": int,
-                "trust": int,
-                "sentiment": int
+                "trust": int
             }
-            条件:sentiment-2~2の範囲で、文章の感情を-2（非常にネガティブ）から2（非常にポジティブ）までの範囲で評価してください。それ以外の指標は0~3の範囲で評価してください。
+            なお、すべての数値は0から3の範囲で表し、2種類のみ1以上の数値を持たないようにしてください。 
             文章：
             $text
         """.trimIndent()
@@ -54,17 +57,6 @@ class ChatGPTRepository {
         // レスポンスをパース
         val jsonText = response.choices.firstOrNull()?.text ?: "{}"
         return parseJsonObject(jsonText)
-    }
-
-    private fun parseJsonArray(jsonText: String): List<String> {
-        // JSON配列をパースする処理
-        return try {
-            val jsonArray = org.json.JSONArray(jsonText)
-            List(jsonArray.length()) { i -> jsonArray.getString(i) }
-        } catch (e: Exception) {
-            Log.e("ChatGPTRepository", "要約結果のパースに失敗: ${e.message}")
-            emptyList()
-        }
     }
 
     private fun parseJsonObject(jsonText: String): Map<String, Float> {

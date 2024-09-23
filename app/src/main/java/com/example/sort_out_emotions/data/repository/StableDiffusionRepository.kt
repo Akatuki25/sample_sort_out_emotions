@@ -1,10 +1,10 @@
 package com.example.sort_out_emotions.data.repository
 
 import com.example.sort_out_emotions.network.api.GradioApi
+import com.example.sort_out_emotions.utils.Constants
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import com.example.sort_out_emotions.utils.Constants
 import java.util.concurrent.TimeUnit
 
 class StableDiffusionRepository {
@@ -26,11 +26,35 @@ class StableDiffusionRepository {
         api = retrofit.create(GradioApi::class.java)
     }
 
-    suspend fun generateImages(summary: List<String>, sentiment: Map<String, Float>): ByteArray {
-        val requestBody = mapOf(
-            "summary" to summary,
-            "sentiment" to sentiment
+    suspend fun generateImage(
+        keyword: String,
+        features: List<Float>
+    ): ByteArray {
+        // 固定のプロンプトを設定
+        val prompts = listOf(
+            "Impressionist",
+            "Realist",
+            "Surrealist",
+            "Futurist",
+            "Romanticist",
+            "Dadaist",
+            "Expressionist",
+            "Cubist"
         )
+
+        val requestBody = mutableMapOf<String, Any>(
+            "keyword" to keyword
+        )
+
+        // prompt1〜prompt8を設定
+        prompts.forEachIndexed { index, prompt ->
+            requestBody["prompt${index + 1}"] = prompt
+        }
+
+        // feature1〜feature8を設定（featuresの各値）
+        features.forEachIndexed { index, feature ->
+            requestBody["feature${index + 1}"] = feature
+        }
 
         val response = api.generateImage(requestBody)
         return response.bytes()
