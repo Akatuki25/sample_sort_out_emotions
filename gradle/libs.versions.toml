@@ -18,6 +18,7 @@ androidxComposeMaterial3 = "1.3.0"
 androidxlifecycle = "2.8.5"
 androidxlifecyclecomposeviewmodel = "2.8.5"
 kotlinxcoroutinescore = "1.7.3"
+navigationRuntimeKtx = "2.8.1"
 
 
 
@@ -50,6 +51,7 @@ androidx-lifecycle = { group = "androidx.lifecycle", name = "lifecycle-runtime-k
 #noinspection SimilarGradleDependency
 androidx-lifecycle-compose-viewmodel = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "androidxlifecyclecomposeviewmodel" }
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinxcoroutinescore" }
+androidx-navigation-runtime-ktx = { group = "androidx.navigation", name = "navigation-runtime-ktx", version.ref = "navigationRuntimeKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -8,12 +8,27 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.example.sort_out_emotions.ui.screen.AskTodayEventScreen
+import com.example.sort_out_emotions.ui.screen.ChooseStickerScreen
 import com.example.sort_out_emotions.ui.screen.MainScreen
+import com.example.sort_out_emotions.ui.screen.ScreenRoute
+import com.example.sort_out_emotions.ui.screen.StickerPreviewScreen
 import com.example.sort_out_emotions.viewmodel.MainViewModel
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.example.sort_out_emotions.ui.screen.chosenSticker
 
 class MainActivity : ComponentActivity() {
 
@@ -34,7 +49,29 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MaterialTheme {
-                MainScreen(mainViewModel)
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ){
+                    val navController = rememberNavController()
+                    NavHost(
+                        navController = navController,
+                        startDestination = ScreenRoute.AskTodayEventScreen.route
+                    ) {
+                        //音声入力画面
+                        composable(route = ScreenRoute.AskTodayEventScreen.route) {
+                            AskTodayEventScreen(modifier = Modifier, navController = navController)
+                        }
+                        //ステッカー選択画面
+                        composable(route = ScreenRoute.ChooseStickerScreen.route) {
+                            ChooseStickerScreen(navController)
+                        }
+                        //ステッカー表示画面
+                        composable(route = ScreenRoute.StickerPreviewScreen.route) {
+                            StickerPreviewScreen()
+                        }
+                    }
+                }
             }
         }
     }
@@ -48,4 +85,10 @@ class MainActivity : ComponentActivity() {
             permissionLauncher.launch(permissions)
         }
     }
+}
+
+@Preview
+@Composable
+fun AppPreview(){
+    AskTodayEventScreen(modifier = Modifier, navController = rememberNavController())
 }
