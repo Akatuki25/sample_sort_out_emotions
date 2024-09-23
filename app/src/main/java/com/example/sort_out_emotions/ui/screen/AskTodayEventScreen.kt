@@ -64,8 +64,7 @@ fun AskTodayEventScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(45.dp)
-                    .background(Wheat),
+                    .padding(45.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
 
@@ -122,10 +121,11 @@ fun AskTodayEventScreen(
                     }
                 }
 
+                Spacer(modifier = Modifier.height(18.dp))
 
                 Text(
                     text = "文字起こし結果: $transcribedText",
-                    fontSize = 26.sp,
+                    fontSize = 23.sp,
                     fontWeight = FontWeight.Bold,
                     color = Saddlebrown
                 )

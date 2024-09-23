@@ -76,23 +76,24 @@ fun ChooseStickerScreen(
 fun ShowSticker(navController: NavController, sticker: String){
 
     //ステッカーの表示
-    //Columnにして影をつけたい
-    Image(
-        painter = painterResource(R.drawable.no),
-        contentDescription = null,
-        modifier = Modifier
-            .size(100.dp)
-            .padding(horizontal = 5.dp)
-            .clickable(
-                onClick = {
-                    //選択されたステッカーを保存
-                    chosenSticker = sticker
+    Surface (shadowElevation = 4.dp){
+        Image(
+            painter = painterResource(R.drawable.no),
+            contentDescription = null,
+            modifier = Modifier
+                .size(100.dp)
+                .padding(horizontal = 5.dp)
+                .clickable(
+                    onClick = {
+                        //選択されたステッカーを保存
+                        chosenSticker = sticker
 
-                    //カレンダー画面に遷移
-                    navController.navigate("sticker_preview_screen/$chosenSticker")
-                }
-            )
-    )
+                        //カレンダー画面に遷移
+                        navController.navigate("sticker_preview_screen/$chosenSticker")
+                    }
+                )
+        )
+    }
 }
 
 @Preview(apiLevel = 34)

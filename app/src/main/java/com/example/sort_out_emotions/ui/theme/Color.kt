@@ -2,7 +2,7 @@ package com.example.sort_out_emotions.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Wheat = Color(245,222,179,255)
+val Wheat = Color(255,228,179,181)
 val Saddlebrown = Color(139,69,19,255)
 val Barlywoood = Color(222,184,135,255)
 
