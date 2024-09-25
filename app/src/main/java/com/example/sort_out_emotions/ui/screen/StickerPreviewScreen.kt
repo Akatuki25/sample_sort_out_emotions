@@ -2,7 +2,6 @@ package com.example.sort_out_emotions.ui.screen
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -30,33 +28,29 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.sort_out_emotions.R
-import com.example.sort_out_emotions.ui.theme.Barlywoood
-import com.example.sort_out_emotions.ui.theme.Saddlebrown
 import com.example.sort_out_emotions.ui.theme.Sort_out_emotionsTheme
-import com.example.sort_out_emotions.ui.theme.Wheat
 import com.example.sort_out_emotions.viewmodel.MainViewModel
 import java.util.Calendar
+import java.util.Date
+import java.text.SimpleDateFormat
+import java.util.TimeZone
 
-data class A(val numbers:List<Int>) {
-    operator fun get(i: Int): Int {
-        return numbers[i]
-    }
+
+@SuppressLint("SimpleDateFormat")
+fun getCurrntDateTimeInJST(): String {
+    val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+    sdf.timeZone = TimeZone.getTimeZone("Asia/Tokyo")
+    val currentDateTime = Date()
+    return sdf.format(currentDateTime)
 }
-
-val week1= A(listOf(1,2,3,4,5,6,7))
-val week2= A(listOf(8,9,10,11,12,13,14))
-val week3= A(listOf(15,16,17,18,19,20,21))
-val week4= A(listOf(22,23,24,25,26,27,28))
-val daysSeptember:List<A> = listOf(week1,week2,week3,week4)
-
 
 @Composable
 fun StickerPreview(mainViewModel: MainViewModel = viewModel()) {
     val dailyImages by mainViewModel.dailyImages.observeAsState(emptyMap())
 
-    val calendar = Calendar.getInstance()
-    val year = calendar.get(Calendar.YEAR)
-    val month = calendar.get(Calendar.MONTH) + 1 // Calendar.MONTHは0始まり
+    val calendar = getCurrntDateTimeInJST()
+    val year = calendar[Calendar.YEAR]
+    val month = calendar[Calendar.MONTH] + 1 // Calendar.MONTHは0始まり
 
     val weeks = generateWeeks(year, month)
 
@@ -118,7 +112,7 @@ fun ShowSticker2(day: Int, dailyImages: Map<String, ImageBitmap>) {
         } else {
             // ステッカーがない時の処理、画像は適宜入れ替えてください
             Image(
-                painter = painterResource(R.drawable.placeholder),
+                painter = painterResource(id = R.drawable.ic_launcher_foreground),
                 contentDescription = null,
                 modifier = Modifier
                     .size(50.dp)
@@ -147,9 +141,9 @@ private fun getDateString(day: Int): String {
 }
 
 // 月の日付リストを週ごとに生成
-private fun generateWeeks(year: Int, month: Int): List<List<Int>> {
+private fun generateWeeks(year: Char, month: Char): List<List<Int>> {
     val calendar = Calendar.getInstance()
-    calendar.set(year, month - 1, 1)
+    calendar.set(year.code, (month - 1).code, 1)
     val maxDay = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
     val firstDayOfWeek = calendar.get(Calendar.DAY_OF_WEEK) // 1:日曜, 7:土曜
 

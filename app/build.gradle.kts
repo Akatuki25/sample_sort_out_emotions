@@ -80,4 +80,5 @@ dependencies {
     implementation(libs.androidx.lifecycle.compose.viewmodel)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.loggingInterceptor)
+    implementation(libs.coilcompose)
 }

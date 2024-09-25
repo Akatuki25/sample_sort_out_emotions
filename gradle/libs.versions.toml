@@ -20,6 +20,7 @@ androidxlifecyclecomposeviewmodel = "2.8.5"
 kotlinxcoroutinescore = "1.7.3"
 navigationCompose = "2.8.1"
 loggingInterceptor = "4.12.0"
+coilcompose = "2.2.2"
 
 
 
@@ -54,6 +55,7 @@ androidx-lifecycle-compose-viewmodel = { group = "androidx.lifecycle", name = "l
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinxcoroutinescore" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 loggingInterceptor = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "loggingInterceptor" }
+coilcompose = { module = "io.coil-kt:coil-compose", version.ref = "coilcompose" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
