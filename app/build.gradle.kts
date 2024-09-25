@@ -62,6 +62,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.runtime.livedata)
+    implementation(libs.androidx.navigation.compose)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -78,4 +79,5 @@ dependencies {
     implementation(libs.androidx.lifecycle)
     implementation(libs.androidx.lifecycle.compose.viewmodel)
     implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.loggingInterceptor)
 }

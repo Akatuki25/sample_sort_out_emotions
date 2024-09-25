@@ -1,3 +1,4 @@
+// ChatGPTResponse.kt
 package com.example.sort_out_emotions.data.model
 
 data class ChatGPTResponse(
@@ -5,5 +6,12 @@ data class ChatGPTResponse(
 )
 
 data class Choice(
-    val text: String
+    val index: Int,
+    val message: ResponseMessage,
+    val finish_reason: String
+)
+
+data class ResponseMessage(
+    val role: String,
+    val content: String
 )

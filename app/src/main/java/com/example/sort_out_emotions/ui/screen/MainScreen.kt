@@ -14,14 +14,19 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.sort_out_emotions.ui.component.StickerCanvas
 import com.example.sort_out_emotions.viewmodel.MainViewModel
+import androidx.navigation.NavController
 
 @Composable
-fun MainScreen(mainViewModel: MainViewModel = viewModel()) {
+fun MainScreen(
+    mainViewModel: MainViewModel = viewModel(),
+    navController: NavController
+) {
     val context = LocalContext.current
     val transcribedText by mainViewModel.transcribedText.observeAsState("")
     val images by mainViewModel.images.observeAsState(emptyList())
@@ -46,6 +51,8 @@ fun MainScreen(mainViewModel: MainViewModel = viewModel()) {
             Button(
                 onClick = {
                     mainViewModel.stopSpeechRecognition()
+                    //ChooseStickerScreenに画面遷移
+                    navController.navigate(ScreenRoute.ChooseStickerScreen.route)
                 },
                 enabled = isRecording // 録音中のみ有効化
             ) {
@@ -55,23 +62,9 @@ fun MainScreen(mainViewModel: MainViewModel = viewModel()) {
 
         Text(text = "文字起こし結果: $transcribedText")
 
-        if (images.isNotEmpty()) {
-            LazyRow {
-                items(images.size) { index ->
-                    Image(
-                        bitmap = images[index],
-                        contentDescription = null,
-                        modifier = Modifier.clickable {
-                            mainViewModel.selectImage(images[index])
-                        }
-                    )
-                }
-            }
-        }
+        //if文消去
 
-        if (selectedImages.isNotEmpty()) {
-            StickerCanvas(stickers = selectedImages)
-        }
+
     }
 }
 

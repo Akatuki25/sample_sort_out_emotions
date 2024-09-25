@@ -1,15 +1,16 @@
+// GradioApi.kt
 package com.example.sort_out_emotions.network.api
 
-import okhttp3.ResponseBody
+import com.example.sort_out_emotions.data.model.GradioRequest
+import com.example.sort_out_emotions.data.model.StableDiffusionResponse
 import retrofit2.http.Body
 import retrofit2.http.Headers
 import retrofit2.http.POST
 
+// GradioApi.kt
 interface GradioApi {
-
     @Headers("Content-Type: application/json")
-    @POST("/predict")
-    suspend fun generateImage(
-        @Body requestBody: Map<String, Any>
-    ): ResponseBody
+    @POST("/run/predict") // エンドポイントを修正
+    suspend fun generateImage(@Body request: GradioRequest): StableDiffusionResponse
 }
+

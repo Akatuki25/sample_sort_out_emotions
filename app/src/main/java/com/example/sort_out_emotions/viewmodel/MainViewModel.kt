@@ -20,8 +20,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
+import java.text.SimpleDateFormat
 import java.util.*
 
+@Suppress("NAME_SHADOWING")
 class MainViewModel : ViewModel() {
 
     private val chatGPTRepository = ChatGPTRepository()
@@ -36,6 +40,10 @@ class MainViewModel : ViewModel() {
     private val _selectedImages = MutableStateFlow<List<ImageBitmap>>(emptyList())
     val selectedImages: StateFlow<List<ImageBitmap>> = _selectedImages
 
+    //日付と選択された画像を保存するためのリスト
+    private val _dailyImages = MutableLiveData<MutableMap<String, ImageBitmap>>(mutableMapOf())
+    val dailyImages: LiveData<MutableMap<String, ImageBitmap>> = _dailyImages
+
     private var speechRecognizer: SpeechRecognizer? = null
 
     // 録音中かどうかを示す状態を追加
@@ -44,6 +52,10 @@ class MainViewModel : ViewModel() {
 
     // 音声認識のリスナーをプロパティとして保持
     private var recognitionListener: android.speech.RecognitionListener? = null
+
+    // 画面遷移のためのLiveDataを追加
+    private val _navigateToChooseStickerScreen = MutableLiveData<Boolean>()
+    val navigateToChooseStickerScreen: LiveData<Boolean> = _navigateToChooseStickerScreen
 
     fun startSpeechRecognition(context: Context) {
         if (speechRecognizer == null) {
@@ -100,23 +112,20 @@ class MainViewModel : ViewModel() {
     }
 
     private fun processText(text: String) {
-        // 音声認識の結果をログに出力
         Log.d("MainViewModel", "音声認識の文字起こし結果: $text")
 
         CoroutineScope(Dispatchers.IO).launch {
-            // ChatGPT APIを使用して要約と感情分析を行う
-            val keywords = chatGPTRepository.summarizeText(text)
-            val sentimentMap = chatGPTRepository.analyzeSentiment(text)
-
-            // 要約結果と感情分析結果をログに出力
-            Log.d("MainViewModel", "ChatGPTの要約結果（キーワード）: $keywords")
-            Log.d("MainViewModel", "ChatGPTの感情分析結果: $sentimentMap")
-
             try {
-                // キーワードをそのままkeywordに渡す
-                val keyword = keywords.trim()
+                // ChatGPT APIを使用して要約と感情分析を行う
+                val keywords = chatGPTRepository.summarizeText(text)
+                val sentimentMap = chatGPTRepository.analyzeSentiment(text)
 
-                // 感情分析結果
+                // ログに出力
+                Log.d("MainViewModel", "ChatGPTの要約結果（キーワード）: $keywords")
+                Log.d("MainViewModel", "ChatGPTの感情分析結果: $sentimentMap")
+
+                val keywordss = keywords.trim()
+
                 val features = listOf(
                     sentimentMap["joy"] ?: 0f,
                     sentimentMap["sadness"] ?: 0f,
@@ -126,29 +135,52 @@ class MainViewModel : ViewModel() {
                     sentimentMap["fear"] ?: 0f,
                     sentimentMap["disgust"] ?: 0f,
                     sentimentMap["trust"] ?: 0f
-                ).map { it * 1.0f }
+                )
 
-                val imageData = stableDiffusionRepository.generateImage(
-                    keyword = keyword,
+                // Gradio APIを使用して画像を生成
+                Log.d("MainViewModel", "Gradio APIリクエストを送信します")
+
+                val bitmapList = stableDiffusionRepository.generateImages(
+                    keywordss = keywordss,
                     features = features
                 )
 
-                val bitmap = BitmapFactory.decodeByteArray(imageData, 0, imageData.size)?.asImageBitmap()
-
-                if (bitmap != null) {
-                    _images.postValue(listOf(bitmap))
+                if (bitmapList.isNotEmpty()) {
+                    _images.postValue(bitmapList.map { it.asImageBitmap() })
                 } else {
-                    Log.e("MainViewModel", "画像のデコードに失敗しました")
+                    Log.e("MainViewModel", "画像の取得に失敗しました")
+                }
+
+                // メインスレッドで画面遷移
+                withContext(Dispatchers.Main) {
+                    // ナビゲーションのイベントを発行するLiveDataやStateFlowを使用して画面遷移を制御
+                    _navigateToChooseStickerScreen.postValue(true)
                 }
             } catch (e: Exception) {
-                Log.e("MainViewModel", "画像生成中にエラーが発生しました: ${e.message}")
+                Log.e("MainViewModel", "処理中にエラーが発生しました: ${e.message}")
+                // エラー処理（ユーザーへのフィードバックなど）
             }
         }
     }
 
+
     fun selectImage(image: ImageBitmap) {
         // 選択された画像をリストに追加
-        _selectedImages.value = _selectedImages.value + image
+        _selectedImages.value = listOf(image)
+        saveImageForToday(image)
+    }
+
+    private fun saveImageForToday(image: ImageBitmap){
+        val date = getCurrentDate()
+        _dailyImages.value?.put(date, image)
+    }
+
+    private fun getCurrentDate(): String{
+        val sdf = SimpleDateFormat(
+            "yyyy-MM-dd",
+            Locale.getDefault()
+        )
+        return sdf.format(Date())
     }
 
     override fun onCleared() {
