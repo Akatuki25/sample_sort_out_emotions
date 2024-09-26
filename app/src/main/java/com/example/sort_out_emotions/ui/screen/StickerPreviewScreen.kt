@@ -2,55 +2,38 @@ package com.example.sort_out_emotions.ui.screen
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.sort_out_emotions.R
-import com.example.sort_out_emotions.ui.theme.Sort_out_emotionsTheme
 import com.example.sort_out_emotions.viewmodel.MainViewModel
-import java.util.Calendar
-import java.util.Date
-import java.text.SimpleDateFormat
-import java.util.TimeZone
-
+import java.util.*
 
 @SuppressLint("SimpleDateFormat")
-fun getCurrntDateTimeInJST(): String {
-    val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-    sdf.timeZone = TimeZone.getTimeZone("Asia/Tokyo")
-    val currentDateTime = Date()
-    return sdf.format(currentDateTime)
+fun getCurrentDateTimeInJST(): Calendar {
+    val timeZone = TimeZone.getTimeZone("Asia/Tokyo")
+    return Calendar.getInstance(timeZone)
 }
 
 @Composable
 fun StickerPreview(mainViewModel: MainViewModel = viewModel()) {
     val dailyImages by mainViewModel.dailyImages.observeAsState(emptyMap())
 
-    val calendar = getCurrntDateTimeInJST()
-    val year = calendar[Calendar.YEAR]
-    val month = calendar[Calendar.MONTH] + 1 // Calendar.MONTHは0始まり
+    val calendar = getCurrentDateTimeInJST()
+    val year = calendar.get(Calendar.YEAR)
+    val month = calendar.get(Calendar.MONTH) + 1 // Calendar.MONTHは0始まり
 
     val weeks = generateWeeks(year, month)
 
@@ -71,27 +54,27 @@ fun StickerPreview(mainViewModel: MainViewModel = viewModel()) {
 
         // 各週を表示
         weeks.forEach { week ->
-            StickerWeekPreview(week, dailyImages)
+            StickerWeekPreview(year, month, week, dailyImages)
             Spacer(Modifier.height(20.dp))
         }
     }
 }
 
 @Composable
-fun StickerWeekPreview(dayList: List<Int>, dailyImages: Map<String, ImageBitmap>) {
+fun StickerWeekPreview(year: Int, month: Int, dayList: List<Int>, dailyImages: Map<String, ImageBitmap>) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceAround
     ) {
         dayList.forEach { day ->
-            ShowSticker2(day, dailyImages)
+            ShowSticker2(year, month, day, dailyImages)
         }
     }
 }
 
 @Composable
-fun ShowSticker2(day: Int, dailyImages: Map<String, ImageBitmap>) {
-    val date = getDateString(day)
+fun ShowSticker2(year: Int, month: Int, day: Int, dailyImages: Map<String, ImageBitmap>) {
+    val date = getDateString(year, month, day)
     val image = dailyImages[date]
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -110,7 +93,7 @@ fun ShowSticker2(day: Int, dailyImages: Map<String, ImageBitmap>) {
                     .padding(bottom = 5.dp)
             )
         } else {
-            // ステッカーがない時の処理、画像は適宜入れ替えてください
+            // ステッカーがない時の処理
             Image(
                 painter = painterResource(id = R.drawable.ic_launcher_foreground),
                 contentDescription = null,
@@ -129,10 +112,7 @@ fun ShowSticker2(day: Int, dailyImages: Map<String, ImageBitmap>) {
 }
 
 @SuppressLint("DefaultLocale")
-private fun getDateString(day: Int): String {
-    val calendar = Calendar.getInstance()
-    val year = calendar.get(Calendar.YEAR)
-    val month = calendar.get(Calendar.MONTH) + 1 // Calendar.MONTHは0始まり
+private fun getDateString(year: Int, month: Int, day: Int): String {
     return if (day > 0) {
         String.format("%04d-%02d-%02d", year, month, day)
     } else {
@@ -141,9 +121,9 @@ private fun getDateString(day: Int): String {
 }
 
 // 月の日付リストを週ごとに生成
-private fun generateWeeks(year: Char, month: Char): List<List<Int>> {
-    val calendar = Calendar.getInstance()
-    calendar.set(year.code, (month - 1).code, 1)
+private fun generateWeeks(year: Int, month: Int): List<List<Int>> {
+    val calendar = Calendar.getInstance(TimeZone.getTimeZone("Asia/Tokyo"))
+    calendar.set(year, month - 1, 1)
     val maxDay = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
     val firstDayOfWeek = calendar.get(Calendar.DAY_OF_WEEK) // 1:日曜, 7:土曜
 
@@ -159,16 +139,4 @@ private fun generateWeeks(year: Char, month: Char): List<List<Int>> {
     }
 
     return days.chunked(7)
-}
-
-
-@Preview(
-    showBackground = true,
-    apiLevel = 34
-)
-@Composable
-fun GreetingPreview() {
-    Sort_out_emotionsTheme {
-        ScreenRoute.StickerPreviewScreen
-    }
 }
